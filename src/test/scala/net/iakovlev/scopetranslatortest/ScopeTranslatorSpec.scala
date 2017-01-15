@@ -83,6 +83,22 @@ class ScopeTranslatorSpec extends Specification {
       val c2 = C2(ADT2.A(3), ADT2.B(4))
       ScopeTranslator[C1, C2](c1) must_== c2
     }
+    "Optional primitive fields" >> {
+      case class C1(i: Option[Int])
+      case class C2(i: Option[Int])
+      val c1 = C1(Some(3))
+      val c2 = C2(Some(3))
+      ScopeTranslator[C1, C2](c1) must_== c2
+    }
+    "Optional product fields" >> {
+      case class Nested1(s: String)
+      case class Nested2(s: String)
+      case class C1(i: Option[Nested1], j: Int)
+      case class C2(i: Option[Nested2], j: Int)
+      val c1 = C1(Some(Nested1("3")), 2)
+      val c2 = C2(Some(Nested2("3")), 2)
+      ScopeTranslator[C1, C2](c1) must_== c2
+    }
   }
 
   "Translator should fail on mismatched" >> {

@@ -25,6 +25,14 @@ object ScopeTranslator {
     override def translate(a: A): CNil = sys.error("CNil from the right!")
   }
 
+  implicit def translateOptional[A, B](implicit tr: ScopeTranslator[A, B])
+    : ScopeTranslator[Option[A], Option[B]] =
+    new ScopeTranslator[Option[A], Option[B]] {
+      override def translate(a: Option[A]): Option[B] = {
+        a.map(tr.translate)
+      }
+    }
+
   implicit def translateEnum[KA <: Symbol,
                              KB <: Symbol,
                              HA,
