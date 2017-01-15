@@ -1,9 +1,12 @@
 #Scope translator
+
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.iakovlev/scope-translator_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.iakovlev/scope-translator_2.11/)
+
 ##Quote
 > The original is unfaithful to the translation.
 >
 >― **Jorge Luis Borges**
- 
+
 ##Overview
  
 This project aims to provide translation between Scala types of identical shape.
@@ -19,7 +22,17 @@ Refer to tests for a more detailed illustration of these rules, where both posit
 If translation fails for some reason (types don't match, etc.), it results in a compile time error.
 
 ##Usage
-You can use scope translator in two ways:
+Add dependency to your project:
+
+In `build.sbt`:
+```scala
+libraryDependencies += "net.iakovlev" %% "scope-translator" % "0.1"
+```
+
+Scope translator is published to Sonatype and synced to Maven Central.
+Supported Scala versions are limited to 2.11 only at the moment.
+
+Then you can use scope translator in two ways:
 
 * Directly by calling `ScopeTranslator[From, To](a: From)`:
 ```scala
