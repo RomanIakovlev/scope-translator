@@ -26,7 +26,7 @@ Add dependency to your project:
 
 In `build.sbt`:
 ```scala
-libraryDependencies += "net.iakovlev" %% "scope-translator" % "0.1"
+libraryDependencies += "net.iakovlev" %% "scope-translator" % "0.1.1"
 ```
 
 Scope translator is published to Sonatype and synced to Maven Central.
