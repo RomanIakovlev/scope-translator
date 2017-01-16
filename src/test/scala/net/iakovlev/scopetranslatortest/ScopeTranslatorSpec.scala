@@ -99,6 +99,61 @@ class ScopeTranslatorSpec extends Specification {
       val c2 = C2(Some(Nested2("3")), 2)
       ScopeTranslator[C1, C2](c1) must_== c2
     }
+    "Lists" >> {
+      case class C1(a: List[Int], s: String)
+      case class C2(a: List[Int], s: String)
+      val c1 = C1(List(4, 5), "a")
+      val c2 = C2(List(4, 5), "a")
+      ScopeTranslator[C1, C2](c1) must_== c2
+    }
+    "Vectors" >> {
+      case class C1(a: Vector[Int], n: Int)
+      case class C2(a: Vector[Int], n: Int)
+      val c1 = C1(Vector(4, 5, 6), 4)
+      val c2 = C2(Vector(4, 5, 6), 4)
+      ScopeTranslator[C1, C2](c1) must_== c2
+    }
+    "Different TraversableOnce instances" >> {
+      case class C1(a: Vector[Int], n: Int)
+      case class C2(a: List[Int], n: Int)
+      val c1 = C1(Vector(4, 5, 6), 4)
+      val c2 = C2(List(4, 5, 6), 4)
+      ScopeTranslator[C1, C2](c1) must_== c2
+    }
+    "Same TraversableOnce instances" >> {
+      case class C1(a: Seq[Int], n: Int)
+      case class C2(a: Seq[Int], n: Int)
+      val c1 = C1(Vector(4, 5, 6), 4)
+      val c2 = C2(List(4, 5, 6), 4)
+      ScopeTranslator[C2, C1](c2) must_== c1
+    }
+    "Maps of primitive types" >> {
+      case class C1(a: Map[String, Int])
+      case class C2(a: Map[String, Int])
+      val c1 = C1(Map("h" -> 1, "w" -> 5))
+      val c2 = C2(Map("h" -> 1, "w" -> 5))
+      ScopeTranslator[C1, C2](c1) must_== c2
+    }
+    "Maps of same types" >> {
+      case class Key(s: String)
+      case class Value(i: Int)
+      case class C1(a: Map[Key, Value])
+      case class C2(a: Map[Key, Value])
+      val c1 = C1(Map(Key("h") -> Value(1), Key("w") -> Value(5)))
+      val c2 = C2(Map(Key("h") -> Value(1), Key("w") -> Value(5)))
+      ScopeTranslator[C1, C2](c1) must_== c2
+    }
+    "Maps of translatable types" >> {
+      case class Key1(s: String)
+      case class Value1(i: Int)
+      case class Key2(s: String)
+      case class Value2(i: Int)
+      case class C1(a: Map[Key1, Value1])
+      case class C2(a: Map[Key2, Value2])
+      val c1 = C1(Map(Key1("h") -> Value1(1), Key1("w") -> Value1(5)))
+      val c2 = C2(Map(Key2("h") -> Value2(1), Key2("w") -> Value2(5)))
+      ScopeTranslator[C1, C2](c1) must_== c2
+    }
   }
 
   "Translator should fail on mismatched" >> {

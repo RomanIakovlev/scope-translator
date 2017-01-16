@@ -4,6 +4,8 @@ import shapeless._
 import shapeless.labelled.{FieldType, field}
 
 import scala.annotation.implicitNotFound
+import scala.collection.generic.CanBuildFrom
+import scala.language.higherKinds
 
 @implicitNotFound("Can't translate ${From} to ${To}")
 abstract class ScopeTranslator[From, To] extends Serializable {
@@ -11,8 +13,8 @@ abstract class ScopeTranslator[From, To] extends Serializable {
 }
 
 object ScopeTranslator {
-  implicit def translateTrivial[A, B](
-      implicit ev: A =:= B): ScopeTranslator[A, B] =
+  implicit def translateTrivial[A, B](implicit ev: A =:= B,
+                                      lp: LowPriority): ScopeTranslator[A, B] =
     new ScopeTranslator[A, B] {
       override def translate(a: A): B = ev(a)
     }
@@ -30,6 +32,30 @@ object ScopeTranslator {
     new ScopeTranslator[Option[A], Option[B]] {
       override def translate(a: Option[A]): Option[B] = {
         a.map(tr.translate)
+      }
+    }
+
+  implicit def translateTraversableOnce[A,
+                                        B,
+                                        SA[A] <: TraversableOnce[A],
+                                        SB[B] <: TraversableOnce[B]](
+      implicit cbf: CanBuildFrom[SB[B], B, SB[B]],
+      tr: Lazy[ScopeTranslator[A, B]]): ScopeTranslator[SA[A], SB[B]] =
+    new ScopeTranslator[SA[A], SB[B]] {
+      override def translate(a: SA[A]): SB[B] = {
+        a.foldLeft(cbf())((acc, a) => acc += tr.value.translate(a)).result()
+      }
+    }
+
+  implicit def translateMap[K1, V1, K2, V2](
+      implicit trk: ScopeTranslator[K1, K2],
+      trv: ScopeTranslator[V1, V2]
+  ): ScopeTranslator[Map[K1, V1], Map[K2, V2]] =
+    new ScopeTranslator[Map[K1, V1], Map[K2, V2]] {
+      override def translate(a: Map[K1, V1]): Map[K2, V2] = {
+        a.map {
+          case (k1, v1) => trk.translate(k1) -> trv.translate(v1)
+        }
       }
     }
 
@@ -80,18 +106,18 @@ object ScopeTranslator {
   implicit def translateCaseClass[A, ARepr, B, BRepr](
       implicit lga: LabelledGeneric.Aux[A, ARepr],
       lgb: LabelledGeneric.Aux[B, BRepr],
-      tr: ScopeTranslator[ARepr, BRepr],
-      lp: LowPriority): ScopeTranslator[A, B] =
+      tr: Lazy[ScopeTranslator[ARepr, BRepr]]): ScopeTranslator[A, B] =
     new ScopeTranslator[A, B] {
       override def translate(a: A): B = {
-        lgb.from(tr.translate(lga.to(a)))
+        lgb.from(tr.value.translate(lga.to(a)))
       }
     }
 
   implicit def translateCoproduct[A, B, RA <: Coproduct, RB <: Coproduct](
       implicit lgb: LabelledGeneric.Aux[B, RB],
       lga: LabelledGeneric.Aux[A, RA],
-      tr: ScopeTranslator[RA, RB]) =
+      tr: ScopeTranslator[RA, RB],
+      lp: LowPriority) =
     new ScopeTranslator[A, B] {
       override def translate(a: A): B = {
         lgb.from(tr.translate(lga.to(a)))
