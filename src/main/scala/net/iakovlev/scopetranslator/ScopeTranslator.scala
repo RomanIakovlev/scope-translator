@@ -40,7 +40,7 @@ object ScopeTranslator {
                                         SA[A] <: TraversableOnce[A],
                                         SB[B] <: TraversableOnce[B]](
       implicit cbf: CanBuildFrom[SB[B], B, SB[B]],
-      tr: Lazy[ScopeTranslator[A, B]]): ScopeTranslator[SA[A], SB[B]] =
+      tr: Strict[ScopeTranslator[A, B]]): ScopeTranslator[SA[A], SB[B]] =
     new ScopeTranslator[SA[A], SB[B]] {
       override def translate(a: SA[A]): SB[B] = {
         a.foldLeft(cbf())((acc, a) => acc += tr.value.translate(a)).result()
@@ -93,7 +93,7 @@ object ScopeTranslator {
   }
 
   implicit def translateHCons[K <: Symbol, HA, TA <: HList, HB, TB <: HList](
-      implicit trh: Lazy[ScopeTranslator[HA, HB]],
+      implicit trh: Strict[ScopeTranslator[HA, HB]],
       trt: ScopeTranslator[TA, TB]
   ): ScopeTranslator[FieldType[K, HA] :: TA, FieldType[K, HB] :: TB] =
     new ScopeTranslator[FieldType[K, HA] :: TA, FieldType[K, HB] :: TB] {
@@ -106,7 +106,7 @@ object ScopeTranslator {
   implicit def translateCaseClass[A, ARepr, B, BRepr](
       implicit lga: LabelledGeneric.Aux[A, ARepr],
       lgb: LabelledGeneric.Aux[B, BRepr],
-      tr: Lazy[ScopeTranslator[ARepr, BRepr]]): ScopeTranslator[A, B] =
+      tr: Strict[ScopeTranslator[ARepr, BRepr]]): ScopeTranslator[A, B] =
     new ScopeTranslator[A, B] {
       override def translate(a: A): B = {
         lgb.from(tr.value.translate(lga.to(a)))
