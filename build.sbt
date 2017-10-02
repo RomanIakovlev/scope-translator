@@ -1,6 +1,8 @@
 name := "scope-translator"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.11.11"
+
+crossScalaVersions := Seq("2.11.11", "2.12.3")
 
 organization := "net.iakovlev"
 
