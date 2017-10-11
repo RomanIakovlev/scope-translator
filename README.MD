@@ -1,6 +1,6 @@
 # Scope translator
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.iakovlev/scope-translator_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.iakovlev/scope-translator_2.11/)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.iakovlev/scope-translator_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.iakovlev/scope-translator_2.12/)
 
 ## Quote
 > The original is unfaithful to the translation.
@@ -26,11 +26,11 @@ Add dependency to your project:
 
 In `build.sbt`:
 ```scala
-libraryDependencies += "net.iakovlev" %% "scope-translator" % "0.1.2"
+libraryDependencies += "net.iakovlev" %% "scope-translator" % "0.1.3"
 ```
 
 Scope translator is published to Sonatype and synced to Maven Central.
-Supported Scala versions are limited to 2.11 only at the moment.
+Supported Scala versions are 2.11 and 2.12.
 
 Then you can use scope translator in two ways:
 
