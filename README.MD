@@ -1,13 +1,13 @@
-#Scope translator
+# Scope translator
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.iakovlev/scope-translator_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.iakovlev/scope-translator_2.11/)
 
-##Quote
+## Quote
 > The original is unfaithful to the translation.
 >
 >― **Jorge Luis Borges**
 
-##Overview
+## Overview
  
 This project aims to provide translation between Scala types of identical shape.
 It is particularly useful when an identical set of types exist in different scopes (packages, etc.).
@@ -21,7 +21,7 @@ Refer to tests for a more detailed illustration of these rules, where both posit
 
 If translation fails for some reason (types don't match, etc.), it results in a compile time error.
 
-##Usage
+## Usage
 Add dependency to your project:
 
 In `build.sbt`:
