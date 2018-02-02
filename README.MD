@@ -14,7 +14,7 @@ It is particularly useful when an identical set of types exist in different scop
 
 The following rules have to be obeyed for successful translation:
 
-1. Members of product types (case classes) have to match exactly (same order and same names);
+1. Members of product types (case classes) have to have same types and be in the same order; prior to version 0.2.0 the member names were also taken into account, but in 0.2.0 this restriction has been removed.
 2. Members of coproduct types (sealed traits families) have to have the same name, order of declaration doesn't matter.
 
 Refer to tests for a more detailed illustration of these rules, where both positive and negative examples are available.
@@ -26,7 +26,7 @@ Add dependency to your project:
 
 In `build.sbt`:
 ```scala
-libraryDependencies += "net.iakovlev" %% "scope-translator" % "0.1.3"
+libraryDependencies += "net.iakovlev" %% "scope-translator" % "0.2.0"
 ```
 
 Scope translator is published to Sonatype and synced to Maven Central.
