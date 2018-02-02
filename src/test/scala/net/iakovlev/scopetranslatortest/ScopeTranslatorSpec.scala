@@ -39,6 +39,11 @@ class ScopeTranslatorSpec extends Specification {
       case class C2(i: Int)
       ScopeTranslator[C1, C2](C1(4)) must_== C2(4)
     }
+    "classes with different member names but matching types" >> {
+      case class C1(i: Int)
+      case class C2(j: Int)
+      ScopeTranslator[C1, C2](C1(4)) must_== C2(4)
+    }
     "nested cases" >> {
       case class Nested(s: String)
       case class C1(i: Int, n: Nested)
@@ -161,12 +166,6 @@ class ScopeTranslatorSpec extends Specification {
       case class Foo(i: Int, s: String)
       case class Bar(s: String, i: Int)
       illTyped("""ScopeTranslator[Foo, Bar](Foo(5, "hello"))""")
-      success
-    }
-    "names" >> {
-      case class Foo(i: Int)
-      case class Bar(j: Int)
-      illTyped("""ScopeTranslator[Foo, Bar](Foo(5))""")
       success
     }
     "types" >> {

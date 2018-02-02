@@ -19,11 +19,15 @@ object ScopeTranslator {
       override def translate(a: A): B = ev(a)
     }
 
-  implicit def translateCNilLeft[A] = new ScopeTranslator[CNil, A] {
+  implicit def translateCNilLeft[A]: ScopeTranslator[CNil, A] {
+    def translate(a: CNil): A
+  } = new ScopeTranslator[CNil, A] {
     override def translate(a: CNil): A = sys.error("CNil from the left!")
   }
 
-  implicit def translateCNilRight[A] = new ScopeTranslator[A, CNil] {
+  implicit def translateCNilRight[A]: ScopeTranslator[A, CNil] {
+    def translate(a: A): CNil
+  } = new ScopeTranslator[A, CNil] {
     override def translate(a: A): CNil = sys.error("CNil from the right!")
   }
 
@@ -92,14 +96,19 @@ object ScopeTranslator {
     override def translate(a: HNil): HNil = HNil
   }
 
-  implicit def translateHCons[K <: Symbol, HA, TA <: HList, HB, TB <: HList](
+  implicit def translateHCons[KA <: Symbol,
+                              KB <: Symbol,
+                              HA,
+                              TA <: HList,
+                              HB,
+                              TB <: HList](
       implicit trh: Strict[ScopeTranslator[HA, HB]],
       trt: ScopeTranslator[TA, TB]
-  ): ScopeTranslator[FieldType[K, HA] :: TA, FieldType[K, HB] :: TB] =
-    new ScopeTranslator[FieldType[K, HA] :: TA, FieldType[K, HB] :: TB] {
+  ): ScopeTranslator[FieldType[KA, HA] :: TA, FieldType[KB, HB] :: TB] =
+    new ScopeTranslator[FieldType[KA, HA] :: TA, FieldType[KB, HB] :: TB] {
       override def translate(
-          a: FieldType[K, HA] :: TA): FieldType[K, HB] :: TB = {
-        field[K](trh.value.translate(a.head)) :: trt.translate(a.tail)
+          a: FieldType[KA, HA] :: TA): FieldType[KB, HB] :: TB = {
+        field[KB](trh.value.translate(a.head)) :: trt.translate(a.tail)
       }
     }
 
