@@ -19,16 +19,10 @@ object ScopeTranslator {
       override def translate(a: A): B = ev(a)
     }
 
-  implicit def translateCNilLeft[A]: ScopeTranslator[CNil, A] {
-    def translate(a: CNil): A
-  } = new ScopeTranslator[CNil, A] {
-    override def translate(a: CNil): A = sys.error("CNil from the left!")
-  }
-
-  implicit def translateCNilRight[A]: ScopeTranslator[A, CNil] {
-    def translate(a: A): CNil
-  } = new ScopeTranslator[A, CNil] {
-    override def translate(a: A): CNil = sys.error("CNil from the right!")
+  implicit def translateCNil: ScopeTranslator[CNil, CNil] {
+    def translate(a: CNil): CNil
+  } = new ScopeTranslator[CNil, CNil] {
+    override def translate(a: CNil): CNil = sys.error("CNil!")
   }
 
   implicit def translateOptional[A, B](implicit tr: ScopeTranslator[A, B])
@@ -71,12 +65,9 @@ object ScopeTranslator {
                              TB <: Coproduct,
                              HARepr <: HList,
                              HBRepr <: HList](
-      implicit wka: Witness.Aux[KA],
-      wkb: Witness.Aux[KB],
-      genA: Generic.Aux[HA, HARepr],
+      implicit genA: Generic.Aux[HA, HARepr],
       genB: Generic.Aux[HB, HBRepr],
-      tra: ScopeTranslator[FieldType[KA, HA] :+: TA, TB],
-      trb: ScopeTranslator[TA, FieldType[KB, HB] :+: TB],
+      trTails: ScopeTranslator[TA, TB],
       tr: ScopeTranslator[HARepr, HBRepr]
   ): ScopeTranslator[FieldType[KA, HA] :+: TA, FieldType[KB, HB] :+: TB] =
     new ScopeTranslator[FieldType[KA, HA] :+: TA, FieldType[KB, HB] :+: TB] {
@@ -84,10 +75,8 @@ object ScopeTranslator {
           a: (FieldType[KA, HA] :+: TA)): (FieldType[KB, HB] :+: TB) = {
         a match {
           case Inl(h) =>
-            if (wka.value.name == wkb.value.name)
-              Inl(field[KB](genB.from(tr.translate(genA.to(h)))))
-            else Inr(tra.translate(a))
-          case Inr(t) => trb.translate(t)
+            Inl(field[KB](genB.from(tr.translate(genA.to(h)))))
+          case Inr(t) => Inr(trTails.translate(t))
         }
       }
     }

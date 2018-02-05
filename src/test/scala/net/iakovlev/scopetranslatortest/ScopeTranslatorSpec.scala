@@ -17,15 +17,28 @@ class ScopeTranslatorSpec extends Specification {
     case object B extends Enum2
   }
 
+  sealed trait Enum3
+  object Enum3 {
+    case object A extends Enum3
+    case object B extends Enum3
+  }
+  sealed trait Enum4
+  object Enum4 {
+    case object A extends Enum4
+    case object B extends Enum4
+  }
+
   sealed trait ADT1
   object ADT1 {
-    case class B(i: Int) extends ADT1
     case class A(i: Int) extends ADT1
+    case class B(i: Int) extends ADT1
+    case object C extends ADT1
   }
   sealed trait ADT2
   object ADT2 {
     case class A(i: Int) extends ADT2
     case class B(i: Int) extends ADT2
+    case object C extends ADT2
   }
 
   "Translator should translate" >> {
@@ -82,10 +95,10 @@ class ScopeTranslatorSpec extends Specification {
       ScopeTranslator[C1, C2](c1) must_== c2
     }
     "ADTs with case classes" >> {
-      case class C1(a: ADT1, b: ADT1)
-      case class C2(a: ADT2, b: ADT2)
-      val c1 = C1(ADT1.A(3), ADT1.B(4))
-      val c2 = C2(ADT2.A(3), ADT2.B(4))
+      case class C1(a: ADT1, b: ADT1, c: ADT1)
+      case class C2(a: ADT2, b: ADT2, c: ADT2)
+      val c1 = C1(ADT1.A(3), ADT1.B(4), ADT1.C)
+      val c2 = C2(ADT2.A(3), ADT2.B(4), ADT2.C)
       ScopeTranslator[C1, C2](c1) must_== c2
     }
     "Optional primitive fields" >> {
