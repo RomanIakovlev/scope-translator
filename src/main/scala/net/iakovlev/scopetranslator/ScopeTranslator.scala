@@ -12,9 +12,53 @@ abstract class ScopeTranslator[From, To] extends Serializable {
   def translate(a: From): To
 }
 
-object ScopeTranslator {
-  implicit def translateTrivial[A, B](implicit ev: A =:= B,
-                                      lp: LowPriority): ScopeTranslator[A, B] =
+import scala.language.experimental.macros
+import scala.reflect.macros.blackbox
+
+trait ScopeTranslatorLowPrio {
+  implicit def generic[A, B] = macro ScopeTranslatorLowPrio.translatorImpl[A, B]
+}
+
+object ScopeTranslatorLowPrio {
+
+  def translatorImpl[A: c.WeakTypeTag, B: c.WeakTypeTag](
+      c: blackbox.Context): c.Expr[ScopeTranslator[A, B]] = {
+    import c.universe._
+    val tpeA = weakTypeOf[A]
+    val tpeB = weakTypeOf[B]
+    case class TranslationGroup(leftName: c.universe.TermSymbol,
+                                leftType: c.universe.Type,
+                                rightName: c.universe.TermSymbol,
+                                rightType: c.universe.Type)
+    val fieldsA = tpeA.decls.collect {
+      case field if field.isMethod && field.asMethod.isCaseAccessor =>
+        (field.asTerm, field.typeSignature)
+    }
+    val fieldsB = tpeB.decls.collect {
+      case field if field.isMethod && field.asMethod.isCaseAccessor =>
+        (field.asTerm, field.typeSignature)
+    }
+    val groups = fieldsA.zip(fieldsB).map {
+      case ((ln, lt), (rn, rt)) => TranslationGroup(ln, lt, rn, rt)
+    }
+    val r =
+      q"""
+         new ScopeTranslator[$tpeA, $tpeB] {
+           def translate(a: $tpeA): $tpeB = {
+             new $tpeB(..${groups.map(g =>
+        q"implicitly[ScopeTranslator[${g.leftType}, ${g.rightType}]].translate(a.${g.leftName})")})
+           }
+         }
+       """
+    c.warning(c.enclosingPosition, showCode(r))
+    c.Expr[ScopeTranslator[A, B]](r)
+  }
+}
+
+object ScopeTranslator extends ScopeTranslatorLowPrio {
+
+  implicit def translateTrivial[A, B](
+      implicit ev: A =:= B): ScopeTranslator[A, B] =
     new ScopeTranslator[A, B] {
       override def translate(a: A): B = ev(a)
     }
@@ -25,11 +69,11 @@ object ScopeTranslator {
     override def translate(a: CNil): CNil = sys.error("CNil!")
   }
 
-  implicit def translateOptional[A, B](implicit tr: ScopeTranslator[A, B])
+  implicit def translateOptional[A, B](implicit tr: Lazy[ScopeTranslator[A, B]])
     : ScopeTranslator[Option[A], Option[B]] =
     new ScopeTranslator[Option[A], Option[B]] {
       override def translate(a: Option[A]): Option[B] = {
-        a.map(tr.translate)
+        a.map(tr.value.translate)
       }
     }
 
@@ -81,7 +125,7 @@ object ScopeTranslator {
       }
     }
 
-  implicit val translateHNil = new ScopeTranslator[HNil, HNil] {
+  /*implicit val translateHNil = new ScopeTranslator[HNil, HNil] {
     override def translate(a: HNil): HNil = HNil
   }
 
@@ -109,13 +153,12 @@ object ScopeTranslator {
       override def translate(a: A): B = {
         lgb.from(tr.value.translate(lga.to(a)))
       }
-    }
+    }*/
 
   implicit def translateCoproduct[A, B, RA <: Coproduct, RB <: Coproduct](
       implicit lgb: LabelledGeneric.Aux[B, RB],
       lga: LabelledGeneric.Aux[A, RA],
-      tr: ScopeTranslator[RA, RB],
-      lp: LowPriority) =
+      tr: ScopeTranslator[RA, RB]) =
     new ScopeTranslator[A, B] {
       override def translate(a: A): B = {
         lgb.from(tr.translate(lga.to(a)))
