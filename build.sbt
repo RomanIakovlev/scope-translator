@@ -8,9 +8,11 @@ organization := "net.iakovlev"
 
 resolvers += Resolver.bintrayRepo("tek", "maven")
 
-libraryDependencies ++= Seq("com.chuusai" %% "shapeless" % "2.3.2",
-                            "org.specs2" %% "specs2-core" % "4.0.2" % "test")
+libraryDependencies ++= Seq(
+  "com.chuusai" %% "shapeless" % "2.3.2" % "test",
+  "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+  "org.specs2" %% "specs2-core" % "4.0.2" % "test")
 
 scalacOptions in Test ++= Seq("-Yrangepos")
 
-addCompilerPlugin("io.tryp" % "splain" % "0.2.7" cross CrossVersion.patch)
+addCompilerPlugin("io.tryp" % "splain" % "0.2.8" cross CrossVersion.patch)

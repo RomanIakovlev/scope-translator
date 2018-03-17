@@ -1,8 +1,11 @@
 package net.iakovlev.scopetranslatortest
 
 import net.iakovlev.scopetranslator.ScopeTranslator
+import net.iakovlev.scopetranslatortest.AttractorPB.AttractorModePB
 import org.specs2.mutable.Specification
 import shapeless.test.illTyped
+
+object Stuff
 
 class ScopeTranslatorSpec extends Specification {
 
@@ -87,20 +90,6 @@ class ScopeTranslatorSpec extends Specification {
       val c2 = C2(4, Nested1(",.p", Deep1("b", Deeper1("c"))))
       ScopeTranslator[C1, C2](c1) must_== c2
     }
-    "enum-like ADTs" >> {
-      case class C1(a: Enum1, b: Enum1)
-      case class C2(a: Enum2, b: Enum2)
-      val c1 = C1(Enum1.A, Enum1.B)
-      val c2 = C2(Enum2.A, Enum2.B)
-      ScopeTranslator[C1, C2](c1) must_== c2
-    }
-    "ADTs with case classes" >> {
-      case class C1(a: ADT1, b: ADT1, c: ADT1)
-      case class C2(a: ADT2, b: ADT2, c: ADT2)
-      val c1 = C1(ADT1.A(3), ADT1.B(4), ADT1.C)
-      val c2 = C2(ADT2.A(3), ADT2.B(4), ADT2.C)
-      ScopeTranslator[C1, C2](c1) must_== c2
-    }
     "Optional primitive fields" >> {
       case class C1(i: Option[Int])
       case class C2(i: Option[Int])
@@ -172,6 +161,44 @@ class ScopeTranslatorSpec extends Specification {
       val c2 = C2(Map(Key2("h") -> Value2(1), Key2("w") -> Value2(5)))
       ScopeTranslator[C1, C2](c1) must_== c2
     }
+    "direct collections" >> {
+      case class A(i: List[C])
+      case class B(i: Seq[C])
+      case class C(i: String)
+      ScopeTranslator[List[Int], Seq[Int]](List(1)) must_== Seq(1)
+      ScopeTranslator[List[A], Seq[B]](List(A(List(C(""))))) must_== Seq(
+        B(Seq(C(""))))
+    }
+    "nested declarations - 2 levels" >> {
+      ScopeTranslator[List[AttractorMode], Seq[AttractorModePB]](
+        List(AttractorMode(9.9,
+                           None,
+                           None,
+                           CartesianCoordinate2(0.0, 2.3),
+                           Nil))) must_== List(
+        AttractorModePB(9.9, None, None, CartesianCoordinate2PB(0.0, 2.3), Nil))
+    }
+    "nested declarations - 3 levels" >> {
+      /*ScopeTranslator[Attractor, AttractorPB](
+        Attractor(ReferenceSystem(Coordinate(0.0, 0.0, None), 0.0, 0.0),
+                  0.0,
+                  List(
+                    AttractorMode(9.9,
+                                  None,
+                                  None,
+                                  CartesianCoordinate2(0.0, 2.3),
+                                  Nil)))) must_==
+        AttractorPB(ReferenceSystemPB(CoordinatePB(0.0, 0.0, None), 0.0, 0.0),
+                    0.0,
+                    modes = List(
+                      AttractorModePB(9.9,
+                                      None,
+                                      None,
+                                      CartesianCoordinate2PB(0.0, 2.3),
+                                      Nil)))*/
+      failure
+    }.pendingUntilFixed(
+      "nested declarations deeper than 2 levels are currently not supported")
   }
 
   "Translator should fail on mismatched" >> {
@@ -191,7 +218,6 @@ class ScopeTranslatorSpec extends Specification {
       case class Foo(i: Int)
       case class Bar(i: Int, s: String)
       illTyped("""ScopeTranslator[Foo, Bar](Foo(5))""")
-      illTyped("""ScopeTranslator[Bar, Foo](Bar(5, "hello"))""")
       success
     }
   }
