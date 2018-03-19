@@ -22,34 +22,39 @@ object MacroImpl {
   def translatorImpl[A: c.WeakTypeTag, B: c.WeakTypeTag](
       c: blackbox.Context): c.Tree = {
     import c.universe._
+
     val tpeA = weakTypeOf[A]
     val tpeB = weakTypeOf[B]
 
-    def members(fields: MemberScope): List[(TermSymbol, Type)] = {
+    def members(fields: MemberScope) = {
       fields.collect {
         case field if field.isMethod && field.asMethod.isCaseAccessor =>
           (field.asTerm, field.typeSignature)
-      }.toList
+      }
     }
-    case class TranslationGroup(leftName: c.universe.TermSymbol,
-                                leftType: c.universe.Type,
-                                rightName: c.universe.TermSymbol,
-                                rightType: c.universe.Type)
+
+    def translator(from: Type, to: Type) = {
+      tq"_root_.net.iakovlev.scopetranslator.ScopeTranslator[$from, $to]"
+    }
+
     val fieldsA = members(tpeA.decls)
     val fieldsB = members(tpeB.decls)
 
     val groups = fieldsA.zip(fieldsB).map {
+      case ((ln, lt), (_, rt)) if lt weak_<:< rt =>
+        q"a.$ln"
       case ((ln, lt), (_, rt)) =>
-        q"_root_.scala.Predef.implicitly[_root_.net.iakovlev.scopetranslator.ScopeTranslator[$lt, $rt]].translate(a.$ln)"
+        q"""_root_.scala.Predef.implicitly[_root_.shapeless.Strict[${translator(lt, rt)}]].value.translate(a.$ln)"""
     }
+
     val r = q"""
-         new _root_.net.iakovlev.scopetranslator.ScopeTranslator[$tpeA, $tpeB] {
+         new ${translator(tpeA, tpeB)} {
            def translate(a: $tpeA): $tpeB = {
              new $tpeB(..$groups)
            }
          }
        """
-    //println(c.enclosingPosition + showCode(r))
+//    println(c.enclosingPosition + showCode(r))
     r
   }
 }
@@ -57,7 +62,7 @@ object MacroImpl {
 object ScopeTranslator extends ScopeTranslatorLowPrio {
 
   implicit def translateTrivial[A, B](
-      implicit ev: A =:= B): ScopeTranslator[A, B] =
+      implicit ev: A <:< B): ScopeTranslator[A, B] =
     new ScopeTranslator[A, B] {
       override def translate(a: A): B = ev(a)
     }

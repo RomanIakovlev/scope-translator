@@ -1,7 +1,10 @@
 package net.iakovlev.scopetranslatortest
 
 import net.iakovlev.scopetranslator.ScopeTranslator
-import net.iakovlev.scopetranslatortest.AttractorPB.AttractorModePB
+import net.iakovlev.scopetranslatortest.AttractorPB.{
+  AttractorModePB,
+  ReferenceSystemPB
+}
 import org.specs2.mutable.Specification
 import shapeless.test.illTyped
 
@@ -179,7 +182,7 @@ class ScopeTranslatorSpec extends Specification {
         AttractorModePB(9.9, None, None, CartesianCoordinate2PB(0.0, 2.3), Nil))
     }
     "nested declarations - 3 levels" >> {
-      /*ScopeTranslator[Attractor, AttractorPB](
+      ScopeTranslator[Attractor, AttractorPB](
         Attractor(ReferenceSystem(Coordinate(0.0, 0.0, None), 0.0, 0.0),
                   0.0,
                   List(
@@ -195,10 +198,8 @@ class ScopeTranslatorSpec extends Specification {
                                       None,
                                       None,
                                       CartesianCoordinate2PB(0.0, 2.3),
-                                      Nil)))*/
-      failure
-    }.pendingUntilFixed(
-      "nested declarations deeper than 2 levels are currently not supported")
+                                      Nil)))
+    }
   }
 
   "Translator should fail on mismatched" >> {

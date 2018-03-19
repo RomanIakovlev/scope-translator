@@ -1,12 +1,19 @@
 package net.iakovlev.scopetranslatortest
 
 import net.iakovlev.scopetranslatortest.AttractorPB.AttractorModePB.AttractorContentPB
-import net.iakovlev.scopetranslatortest.AttractorPB.{AttractorModePB, ReferenceSystemPB}
+import net.iakovlev.scopetranslatortest.AttractorPB.{
+  AttractorModePB,
+  ReferenceSystemPB
+}
 
 case class CartesianCoordinate2(X: Double, Y: Double)
 case class Coordinate(latitude: Double,
                       longitude: Double,
                       altitude: Option[Double])
+
+case class Attractor(LocalReference: ReferenceSystem,
+                     DetectionRadius: Double,
+                     Modes: List[AttractorMode])
 
 case class AttractorMode(Radius: Double,
                          Tolerance: Option[Double],
@@ -19,10 +26,6 @@ final case class CartesianCoordinate2PB(
     x: _root_.scala.Double,
     y: _root_.scala.Double
 )
-
-case class Attractor(LocalReference: ReferenceSystem,
-                     DetectionRadius: Double,
-                     Modes: List[AttractorMode])
 
 case class ReferenceSystem(Coordinates: Coordinate,
                            LatitudeFactor: Double,
