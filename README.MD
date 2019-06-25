@@ -25,11 +25,11 @@ Add dependency to your project:
 
 In `build.sbt`:
 ```scala
-libraryDependencies += "net.iakovlev" %% "scope-translator" % "0.3.0"
+libraryDependencies += "net.iakovlev" %% "scope-translator" % "0.3.2"
 ```
 
 Scope translator is published to Sonatype and synced to Maven Central.
-Supported Scala versions are 2.11 and 2.12.
+Supported Scala versions are 2.11, 2.12 and 2.13.
 
 Then you can use scope translator in two ways:
 
